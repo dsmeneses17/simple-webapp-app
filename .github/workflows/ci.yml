@@ -5,10 +5,20 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  # Allow manual trigger with option to run E2E tests
+  workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: 'Run E2E tests (requires BASE_URL and DB secrets)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 env:
   CI: true
-  BASE_URL: http://localhost:3000
 
 jobs:
   # ──────────────────────────────────────────
@@ -43,12 +53,14 @@ jobs:
           retention-days: 14
 
   # ──────────────────────────────────────────
-  # Job 2: E2E Tests (needs browsers)
+  # Job 2: E2E Tests (needs browsers + infra)
+  # Only runs on manual dispatch with run_e2e=true
   # ──────────────────────────────────────────
   e2e-tests:
     name: 🌐 E2E Tests
     runs-on: ubuntu-latest
     needs: unit-tests
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_e2e == 'true'
 
     steps:
       - name: 📥 Checkout repository
@@ -96,12 +108,12 @@ jobs:
           retention-days: 14
 
   # ──────────────────────────────────────────
-  # Job 3: Allure Report (aggregated)
+  # Job 3: Allure Report
   # ──────────────────────────────────────────
   allure-report:
     name: 📊 Allure Report
     runs-on: ubuntu-latest
-    needs: [unit-tests, e2e-tests]
+    needs: [unit-tests]
     if: always()
 
     steps:
@@ -109,13 +121,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: unit-test-results
-          path: allure-results/unit
-
-      - name: 📥 Download E2E test results
-        uses: actions/download-artifact@v4
-        with:
-          name: e2e-test-results
-          path: allure-results/e2e
+          path: allure-results/
 
       - name: 📊 Generate Allure Report
         uses: simple-elf/allure-report-action@v1.9
