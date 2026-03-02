@@ -63,7 +63,27 @@ jobs:
         run: npx playwright install chromium
 
       - name: Run E2E tests (excluding DB tests)
-        run: npx playwright test tests/e2e/home.spec.ts tests/e2e/excel-data.spec.ts --project=chromium
+        run: npm run test:e2e -- --grep-invert "Database Validation" --project=chromium
+
+      - name: Debug - Check E2E test results
+        if: always()
+        shell: pwsh
+        run: |
+          Write-Host "Checking for allure-results directory..."
+          if (Test-Path "allure-results") {
+            Write-Host "✓ allure-results directory exists"
+            Get-ChildItem -Path "allure-results" -Recurse | ForEach-Object { Write-Host $_.FullName }
+          } else {
+            Write-Host "✗ allure-results directory NOT found"
+          }
+          Write-Host ""
+          Write-Host "Checking for test-results directory..."
+          if (Test-Path "test-results") {
+            Write-Host "✓ test-results directory exists"
+            Get-ChildItem -Path "test-results" -Recurse | ForEach-Object { Write-Host $_.FullName }
+          } else {
+            Write-Host "✗ test-results directory NOT found"
+          }
 
       - name: Upload test results
         if: always()
@@ -109,6 +129,30 @@ jobs:
           mkdir -p allure-results
           Copy-Item -Path "allure-results-unit/*" -Destination "allure-results/" -Force
           Copy-Item -Path "allure-results-e2e/*" -Destination "allure-results/" -Force
+
+      - name: Debug - Check merged results
+        shell: pwsh
+        run: |
+          Write-Host "=== Unit Results ==="
+          if (Test-Path "allure-results-unit") {
+            Get-ChildItem -Path "allure-results-unit" -Recurse | Measure-Object | Select-Object Count
+          } else {
+            Write-Host "No unit results found"
+          }
+          Write-Host ""
+          Write-Host "=== E2E Results ==="
+          if (Test-Path "allure-results-e2e") {
+            Get-ChildItem -Path "allure-results-e2e" -Recurse | Measure-Object | Select-Object Count
+          } else {
+            Write-Host "No E2E results found"
+          }
+          Write-Host ""
+          Write-Host "=== Merged Results ==="
+          if (Test-Path "allure-results") {
+            Get-ChildItem -Path "allure-results" -Recurse | Measure-Object | Select-Object Count
+          } else {
+            Write-Host "No merged results found"
+          }
 
       - name: Install Allure CLI
         shell: pwsh
