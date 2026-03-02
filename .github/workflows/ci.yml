@@ -1,0 +1,161 @@
+name: CI - Unit & E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  CI: true
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:unit -- --project=chromium
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: allure-results/
+          retention-days: 14
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    services:
+      oracle-db:
+        image: gvenzl/oracle-free:23-slim
+        env:
+          ORACLE_PASSWORD: oracle123
+          APP_USER: testuser
+          APP_USER_PASSWORD: testpass123
+        ports:
+          - 1521:1521
+        options: >-
+          --health-cmd "healthcheck.sh"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 15
+          --health-start-period 120s
+
+    env:
+      BASE_URL: http://localhost:3000
+      DB_HOST: localhost
+      DB_PORT: 1521
+      DB_SERVICE_NAME: FREEPDB1
+      DB_USER: testuser
+      DB_PASSWORD: testpass123
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Wait for Oracle DB to be ready
+        run: |
+          echo "Waiting for Oracle DB..."
+          for i in $(seq 1 30); do
+            if node -e "
+              const oracledb = require('oracledb');
+              oracledb.getConnection({
+                user: 'testuser',
+                password: 'testpass123',
+                connectionString: 'localhost:1521/FREEPDB1'
+              }).then(c => { c.close(); process.exit(0); }).catch(() => process.exit(1));
+            " 2>/dev/null; then
+              echo "Oracle DB is ready!"
+              break
+            fi
+            echo "  Attempt $i/30 - waiting 5s..."
+            sleep 5
+          done
+
+      - name: Run E2E tests
+        run: npm run test:e2e -- --project=chromium
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            allure-results/
+            test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  allure-report:
+    name: Allure Report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, e2e-tests]
+    if: always()
+
+    steps:
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Download unit test results
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-results
+          path: allure-results/unit
+        continue-on-error: true
+
+      - name: Download E2E test results
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-test-results
+          path: allure-results/e2e
+        continue-on-error: true
+
+      - name: Install Allure CLI
+        run: |
+          curl -sL https://github.com/allure-framework/allure2/releases/download/2.32.0/allure-2.32.0.tgz -o allure.tgz
+          tar -xzf allure.tgz
+          echo "$PWD/allure-2.32.0/bin" >> $GITHUB_PATH
+
+      - name: Generate Allure Report
+        run: allure generate allure-results --clean -o allure-report
+
+      - name: Upload Allure Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+          retention-days: 30
+          if-no-files-found: ignore
