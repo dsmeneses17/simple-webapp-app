@@ -56,4 +56,12 @@ export default defineConfig({
             use: { ...devices['Desktop Safari'] },
         },
     ],
+
+    // Auto-start the web server before E2E tests
+    webServer: {
+        command: 'npx tsx src/server/app.ts',
+        port: 3000,
+        reuseExistingServer: !process.env.CI,
+        timeout: 10_000,
+    },
 });

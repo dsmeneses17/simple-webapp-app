@@ -1,0 +1,51 @@
+# ============================================
+# Docker Compose — Local development
+# Webapp + Oracle XE (Free) for E2E testing
+# ============================================
+services:
+  # ─── Web Application ───────────────────────
+  webapp:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - ENV=dev
+      - BASE_URL=http://localhost:3000
+      - DB_HOST=oracle-db
+      - DB_PORT=1521
+      - DB_SERVICE_NAME=FREEPDB1
+      - DB_USER=testuser
+      - DB_PASSWORD=testpass123
+    depends_on:
+      oracle-db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # ─── Oracle Database (Free/XE) ─────────────
+  oracle-db:
+    image: gvenzl/oracle-free:23-slim
+    ports:
+      - "1521:1521"
+    environment:
+      - ORACLE_PASSWORD=oracle123
+      - APP_USER=testuser
+      - APP_USER_PASSWORD=testpass123
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh"]
+      interval: 15s
+      timeout: 10s
+      start_period: 90s
+      retries: 10
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    networks:
+      - app-network
+
+volumes:
+  oracle-data:
+
+networks:
+  app-network:
+    driver: bridge
