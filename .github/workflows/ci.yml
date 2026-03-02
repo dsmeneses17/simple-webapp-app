@@ -93,15 +93,22 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: unit-test-results
-          path: allure-results
+          path: allure-results-unit
         continue-on-error: true
 
       - name: Download E2E test results
         uses: actions/download-artifact@v4
         with:
           name: e2e-test-results
-          path: allure-results
+          path: allure-results-e2e
         continue-on-error: true
+
+      - name: Merge Allure results
+        shell: pwsh
+        run: |
+          mkdir -p allure-results
+          Copy-Item -Path "allure-results-unit/*" -Destination "allure-results/" -Force
+          Copy-Item -Path "allure-results-e2e/*" -Destination "allure-results/" -Force
 
       - name: Install Allure CLI
         shell: pwsh
