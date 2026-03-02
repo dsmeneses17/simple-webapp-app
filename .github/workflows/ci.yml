@@ -93,14 +93,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: unit-test-results
-          path: allure-results/unit
+          path: allure-results
         continue-on-error: true
 
       - name: Download E2E test results
         uses: actions/download-artifact@v4
         with:
           name: e2e-test-results
-          path: allure-results/e2e
+          path: allure-results
         continue-on-error: true
 
       - name: Install Allure CLI
