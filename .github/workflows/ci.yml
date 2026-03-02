@@ -123,37 +123,6 @@ jobs:
           path: allure-results-e2e
         continue-on-error: true
 
-      - name: Merge Allure results
-        shell: pwsh
-        run: |
-          mkdir -p allure-results
-          Copy-Item -Path "allure-results-unit/*" -Destination "allure-results/" -Force
-          Copy-Item -Path "allure-results-e2e/*" -Destination "allure-results/" -Force
-
-      - name: Debug - Check merged results
-        shell: pwsh
-        run: |
-          Write-Host "=== Unit Results ==="
-          if (Test-Path "allure-results-unit") {
-            Get-ChildItem -Path "allure-results-unit" -Recurse | Measure-Object | Select-Object Count
-          } else {
-            Write-Host "No unit results found"
-          }
-          Write-Host ""
-          Write-Host "=== E2E Results ==="
-          if (Test-Path "allure-results-e2e") {
-            Get-ChildItem -Path "allure-results-e2e" -Recurse | Measure-Object | Select-Object Count
-          } else {
-            Write-Host "No E2E results found"
-          }
-          Write-Host ""
-          Write-Host "=== Merged Results ==="
-          if (Test-Path "allure-results") {
-            Get-ChildItem -Path "allure-results" -Recurse | Measure-Object | Select-Object Count
-          } else {
-            Write-Host "No merged results found"
-          }
-
       - name: Install Allure CLI
         shell: pwsh
         run: |
@@ -162,7 +131,7 @@ jobs:
           "$PWD\allure-2.32.0\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Generate Allure Report
-        run: allure generate allure-results --clean -o allure-report
+        run: allure generate allure-results-unit allure-results-e2e --clean -o allure-report
 
       - name: Upload Allure Report
         uses: actions/upload-artifact@v4
