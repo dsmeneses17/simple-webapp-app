@@ -42,17 +42,9 @@ jobs:
     name: E2E Tests
     runs-on: windows-latest
     needs: unit-tests
-    # NOTE: The Oracle image (gvenzl/oracle-free) is Linux-based.
-    # Windows-hosted runners require Docker Desktop configured for Linux containers.
-    # Consider using a self-hosted runner if this doesn't work on GitHub-hosted Windows runners.
 
     env:
       BASE_URL: http://localhost:3000
-      DB_HOST: localhost
-      DB_PORT: 1521
-      DB_SERVICE_NAME: FREEPDB1
-      DB_USER: testuser
-      DB_PASSWORD: testpass123
 
     steps:
       - name: Checkout repository
@@ -70,33 +62,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Start Oracle DB container
-        shell: pwsh
-        run: |
-          docker run -d `
-            --name oracle-db `
-            -e ORACLE_PASSWORD=oracle123 `
-            -e APP_USER=testuser `
-            -e APP_USER_PASSWORD=testpass123 `
-            -p 1521:1521 `
-            gvenzl/oracle-free:23-slim
-
-      - name: Wait for Oracle DB to be ready
-        shell: pwsh
-        run: |
-          Write-Host "Waiting for Oracle DB..."
-          for ($i = 1; $i -le 30; $i++) {
-            node -e "const oracledb = require('oracledb'); oracledb.getConnection({ user: 'testuser', password: 'testpass123', connectionString: 'localhost:1521/FREEPDB1' }).then(c => { c.close(); process.exit(0); }).catch(() => process.exit(1));" 2>$null
-            if ($LASTEXITCODE -eq 0) {
-              Write-Host "Oracle DB is ready!"
-              break
-            }
-            Write-Host "  Attempt $i/30 - waiting 5s..."
-            Start-Sleep -Seconds 5
-          }
-
-      - name: Run E2E tests
-        run: npm run test:e2e -- --project=chromium
+      - name: Run E2E tests (excluding DB tests)
+        run: npx playwright test tests/e2e/ --ignore-pattern db-validation.spec.ts --project=chromium
 
       - name: Upload test results
         if: always()
