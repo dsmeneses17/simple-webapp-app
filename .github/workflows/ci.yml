@@ -65,34 +65,12 @@ jobs:
       - name: Run E2E tests (excluding DB tests)
         run: npm run test:e2e -- --grep-invert "Database Validation" --project=chromium
 
-      - name: Debug - Check E2E test results
-        if: always()
-        shell: pwsh
-        run: |
-          Write-Host "Checking for allure-results directory..."
-          if (Test-Path "allure-results") {
-            Write-Host "✓ allure-results directory exists"
-            Get-ChildItem -Path "allure-results" -Recurse | ForEach-Object { Write-Host $_.FullName }
-          } else {
-            Write-Host "✗ allure-results directory NOT found"
-          }
-          Write-Host ""
-          Write-Host "Checking for test-results directory..."
-          if (Test-Path "test-results") {
-            Write-Host "✓ test-results directory exists"
-            Get-ChildItem -Path "test-results" -Recurse | ForEach-Object { Write-Host $_.FullName }
-          } else {
-            Write-Host "✗ test-results directory NOT found"
-          }
-
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
-          path: |
-            allure-results/
-            test-results/
+          path: allure-results/
           retention-days: 14
           if-no-files-found: ignore
 
