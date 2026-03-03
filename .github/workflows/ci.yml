@@ -2,7 +2,7 @@ name: CI - Unit & E2E Tests
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, feature/self-hosted-runner]
   pull_request:
     branches: [main, develop]
   workflow_dispatch:
@@ -13,7 +13,7 @@ env:
 jobs:
   unit-tests:
     name: Unit Tests
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64, windows-runner]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,7 +22,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -40,7 +39,7 @@ jobs:
 
   e2e-tests:
     name: E2E Tests
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64, windows-runner]
     needs: unit-tests
 
     env:
@@ -54,7 +53,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -76,7 +74,7 @@ jobs:
 
   allure-report:
     name: Allure Report
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64, windows-runner]
     needs: [unit-tests, e2e-tests]
     if: always()
 
