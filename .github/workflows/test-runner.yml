@@ -73,19 +73,13 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
-  allure-report:
-    name: Allure Report
-    runs-on: self-hosted
+  test-results:
+    name: Store Test Results
+    runs-on: Runner-test
     needs: [unit-tests, e2e-tests]
     if: always()
 
     steps:
-      - name: Install Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: "17"
-
       - name: Download unit test results
         uses: actions/download-artifact@v4
         with:
@@ -99,26 +93,3 @@ jobs:
           name: e2e-test-results
           path: allure-results-e2e
         continue-on-error: true
-
-      - name: Merge test results
-        run: |
-          mkdir -p allure-results
-          if [ -d allure-results-unit ]; then cp -r allure-results-unit/* allure-results/ || true; fi
-          if [ -d allure-results-e2e ]; then cp -r allure-results-e2e/* allure-results/ || true; fi
-        shell: bash
-        continue-on-error: true
-
-      - name: Generate Allure Report
-        uses: simple-elf/allure-report-action@master
-        if: always()
-        with:
-          allure_results: allure-results
-          allure_history: allure-history
-          keep_reports: 20
-
-      - name: Deploy report to GitHub Pages
-        if: always()
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: allure-report
