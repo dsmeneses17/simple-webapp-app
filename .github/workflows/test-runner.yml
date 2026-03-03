@@ -100,6 +100,10 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
+      - name: Install Allure CLI
+        run: npm install -g allure-commandline
+        continue-on-error: true
+
       - name: Generate Allure Report
         run: allure generate allure-results-unit allure-results-e2e --clean -o allure-report
         continue-on-error: true
