@@ -107,3 +107,12 @@ jobs:
       - name: Generate Allure Report
         run: allure generate allure-results-unit allure-results-e2e --clean -o allure-report
         continue-on-error: true
+
+      - name: Upload Allure Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+          retention-days: 30
+        continue-on-error: true
