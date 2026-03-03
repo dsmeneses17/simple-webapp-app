@@ -75,7 +75,7 @@ jobs:
 
   test-results:
     name: Store Test Results
-    runs-on: Runner-test
+    runs-on: self-hosted
     needs: [unit-tests, e2e-tests]
     if: always()
 
