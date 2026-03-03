@@ -1,5 +1,5 @@
 name: CI - Unit & E2E Tests
-#comment: This workflow runs unit and E2E tests on a self-hosted runner named DAVID1. It generates Allure reports and deploys them to GitHub Pages.
+#comment: This workflow runs unit and E2E tests on a self-hosted runner named Runner-test. It generates Allure reports and deploys them to GitHub Pages.
 # Updated to force workflow refresh
 on:
   push:
@@ -14,7 +14,7 @@ env:
 jobs:
   unit-tests:
     name: Unit Tests
-    runs-on: DAVID1
+    runs-on: Runner-test
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
 
   e2e-tests:
     name: E2E Tests
-    runs-on: DAVID1
+    runs-on: Runner-test
     needs: unit-tests
 
     env:
@@ -75,7 +75,7 @@ jobs:
 
   allure-report:
     name: Allure Report
-    runs-on: DAVID1
+    runs-on: Runner-test
     needs: [unit-tests, e2e-tests]
     if: always()
 
