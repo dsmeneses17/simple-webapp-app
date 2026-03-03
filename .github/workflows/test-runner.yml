@@ -1,0 +1,123 @@
+name: CI - Unit & E2E Tests
+
+on:
+  push:
+    branches: [main, develop, feature/self-hosted-runner]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  CI: true
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: DAVID1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:unit -- --project=chromium
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: allure-results/
+          retention-days: 14
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: DAVID1
+    needs: unit-tests
+
+    env:
+      BASE_URL: http://localhost:3000
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
+      - name: Run E2E tests (excluding DB tests)
+        run: npm run test:e2e -- --grep-invert "Database Validation" --project=chromium
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: allure-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  allure-report:
+    name: Allure Report
+    runs-on: DAVID1
+    needs: [unit-tests, e2e-tests]
+    if: always()
+
+    steps:
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Download unit test results
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-results
+          path: allure-results-unit
+        continue-on-error: true
+
+      - name: Download E2E test results
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-test-results
+          path: allure-results-e2e
+        continue-on-error: true
+
+      - name: Merge test results
+        run: |
+          mkdir -p allure-results
+          if [ -d allure-results-unit ]; then cp -r allure-results-unit/* allure-results/ || true; fi
+          if [ -d allure-results-e2e ]; then cp -r allure-results-e2e/* allure-results/ || true; fi
+        shell: bash
+        continue-on-error: true
+
+      - name: Generate Allure Report
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        with:
+          allure_results: allure-results
+          allure_history: allure-history
+          keep_reports: 20
+
+      - name: Deploy report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: allure-report
