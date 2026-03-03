@@ -101,9 +101,5 @@ jobs:
           java-version: "17"
 
       - name: Generate Allure Report
-        uses: simple-elf/allure-report-action@master
-        if: always()
-        with:
-          allure_results: allure-results-unit
-          allure_history: allure-history
-          keep_reports: 20
+        run: allure generate allure-results-unit allure-results-e2e --clean -o allure-report
+        continue-on-error: true
