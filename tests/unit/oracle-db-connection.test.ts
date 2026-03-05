@@ -84,13 +84,14 @@ async function runTests() {
         db = new OracleDBHelper();
         try {
             await db.connect();
-            const queryResult = await db.query<{ CURRENT_DATE: string }>(
+            const queryResult = await db.query<{ CURRENT_DATE: Date | string }>(
                 'SELECT TRUNC(SYSDATE) AS CURRENT_DATE FROM DUAL'
             );
             await assert(queryResult.length === 1, 'Query returned exactly 1 row');
+            const dateValue = queryResult[0].CURRENT_DATE;
             await assert(
-                queryResult[0].CURRENT_DATE.length > 0,
-                `Database Date: ${queryResult[0].CURRENT_DATE}`
+                dateValue !== null && dateValue !== undefined,
+                `Database Date: ${dateValue}`
             );
             await db.close();
         } catch (error) {
