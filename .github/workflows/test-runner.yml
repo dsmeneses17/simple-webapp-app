@@ -47,39 +47,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Start Docker containers (Oracle DB + Webapp)
-        run: docker-compose up -d
-        timeout-minutes: 5
-
-      - name: Wait for Oracle Database to be ready
-        run: |
-          echo "⏳ Waiting for Oracle Database to initialize (this takes ~90 seconds)..."
-          timeout=0
-          while [ $timeout -lt 120 ]; do
-            if docker exec -it $(docker ps -q -f "name=oracle-db") sqlplus -L testuser/testpass123@localhost:1521/FREEPDB1 <<< "SELECT 1 FROM DUAL;" > /dev/null 2>&1; then
-              echo "✅ Oracle Database is ready!"
-              break
-            fi
-            echo "Waiting... ($timeout/120 seconds)"
-            sleep 5
-            timeout=$((timeout + 5))
-          done
-          if [ $timeout -ge 120 ]; then
-            echo "❌ Oracle Database failed to start"
-            docker-compose logs oracle-db
-            exit 1
-          fi
-        shell: bash
-        timeout-minutes: 3
-
       - name: Run database connection tests
         run: npm run test:unit -- tests/unit/oracle-db-connection.spec.ts --project=chromium
         env:
@@ -99,10 +66,6 @@ jobs:
           path: allure-results/
           retention-days: 14
 
-      - name: Stop Docker containers
-        if: always()
-        run: docker-compose down
-
   e2e-tests:
     name: E2E Tests
     runs-on: self-hosted
@@ -120,33 +83,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install chromium
-
-      - name: Start Docker containers (Oracle DB + Webapp)
-        run: docker-compose up -d
-
-      - name: Wait for services to be ready
-        run: |
-          echo "⏳ Waiting for services to be ready..."
-          for i in {1..30}; do
-            if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
-              echo "✅ Services are ready!"
-              break
-            fi
-            echo "Waiting... ($i/30)"
-            sleep 2
-          done
-        shell: bash
-
       - name: Run E2E tests (INCLUDING Database Validation)
         run: npm run test:e2e -- --project=chromium
 
@@ -158,10 +94,6 @@ jobs:
           path: allure-results/
           retention-days: 14
           if-no-files-found: ignore
-
-      - name: Stop Docker containers
-        if: always()
-        run: docker-compose down
 
   test-results:
     name: Store Test Results
