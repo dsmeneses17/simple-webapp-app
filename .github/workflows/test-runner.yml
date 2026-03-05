@@ -219,6 +219,15 @@ jobs:
           } else {
             Write-Host "allure-results-e2e not found"
           }
+          
+          Write-Host "=== Checking first DB result file ==="
+          if (Test-Path allure-results-db) {
+            $firstFile = Get-ChildItem allure-results-db/*.json -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($firstFile) {
+              Write-Host "File: $($firstFile.Name)"
+              Get-Content $firstFile.FullName | ConvertFrom-Json | ConvertTo-Json -Depth 3
+            }
+          }
         shell: powershell
 
       - name: Generate Allure Report
