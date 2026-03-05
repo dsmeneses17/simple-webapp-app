@@ -39,13 +39,18 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           EXCEL_DATA_PATH: ${{ vars.EXCEL_DATA_PATH }}
+          ALLURE_RESULTS_DIR: ./allure-results-unit
+
+      - name: Move unit test results to named directory
+        if: always()
+        run: mkdir -p allure-results-unit && mv allure-results/* allure-results-unit/ || true
 
       - name: Upload unit test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
-          path: allure-results/
+          path: allure-results-unit/
           retention-days: 14
 
   db-connection-tests:
@@ -78,12 +83,16 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           EXCEL_DATA_PATH: ${{ vars.EXCEL_DATA_PATH }}
 
+      - name: Move database test results to named directory
+        if: always()
+        run: mkdir -p allure-results-db && mv allure-results/* allure-results-db/ || true
+
       - name: Upload database test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: db-connection-test-results
-          path: allure-results/
+          path: allure-results-db/
           retention-days: 14
 
   e2e-tests:
@@ -116,12 +125,16 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           EXCEL_DATA_PATH: ${{ vars.EXCEL_DATA_PATH }}
 
+      - name: Move E2E test results to named directory
+        if: always()
+        run: mkdir -p allure-results-e2e && mv allure-results/* allure-results-e2e/ || true
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
-          path: allure-results/
+          path: allure-results-e2e/
           retention-days: 14
           if-no-files-found: ignore
 
