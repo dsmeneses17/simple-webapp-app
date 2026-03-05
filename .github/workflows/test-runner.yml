@@ -66,7 +66,7 @@ jobs:
         run: npm ci
 
       - name: Run database connection tests
-        run: npx playwright test tests/unit/oracle-db-connection.spec.ts --project=chromium --quiet
+        run: npm run test:unit:db
         env:
           BASE_URL: ${{ vars.BASE_URL }}
           ENV: ${{ vars.ENV }}
@@ -77,14 +77,6 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           EXCEL_DATA_PATH: ${{ vars.EXCEL_DATA_PATH }}
-
-      - name: Upload database test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: db-connection-test-results
-          path: allure-results/
-          retention-days: 14
 
   e2e-tests:
     name: E2E Tests
@@ -139,13 +131,6 @@ jobs:
           path: allure-results-unit
         continue-on-error: true
 
-      - name: Download database connection test results
-        uses: actions/download-artifact@v4
-        with:
-          name: db-connection-test-results
-          path: allure-results-db
-        continue-on-error: true
-
       - name: Download E2E test results
         uses: actions/download-artifact@v4
         with:
@@ -164,7 +149,7 @@ jobs:
         continue-on-error: true
 
       - name: Generate Allure Report
-        run: allure generate allure-results-unit allure-results-db allure-results-e2e --clean -o allure-report
+        run: allure generate allure-results-unit allure-results-e2e --clean -o allure-report
         continue-on-error: true
 
       - name: Upload Allure Report
