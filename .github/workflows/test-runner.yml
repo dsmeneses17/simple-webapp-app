@@ -222,7 +222,7 @@ jobs:
         shell: powershell
 
       - name: Generate Allure Report
-        run: allure generate allure-results-unit allure-results-db allure-results-e2e --clean -o allure-report
+        run: allure generate allure-results-unit allure-results-db allure-results-e2e --clean --reportDir allure-report
         continue-on-error: true
 
       - name: Upload Allure Report
