@@ -27,8 +27,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit tests (excluding DB connection tests)
-        run: npm run test:unit -- tests/unit/{env-config,excel-helper,oracle-db-helper,page-objects}.spec.ts --project=chromium
+      - name: Run unit tests
+        run: npm run test:unit -- tests/unit/env-config.spec.ts tests/unit/excel-helper.spec.ts tests/unit/oracle-db-helper.spec.ts tests/unit/page-objects.spec.ts --project=chromium
 
       - name: Upload unit test results
         if: always()
@@ -42,36 +42,42 @@ jobs:
     name: Database Connection Tests
     runs-on: self-hosted
     needs: unit-tests
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Start Docker containers (Oracle DB + Webapp)
         run: docker-compose up -d
+        timeout-minutes: 5
 
       - name: Wait for Oracle Database to be ready
         run: |
-          Write-Host "⏳ Waiting for Oracle Database to initialize (this takes ~90 seconds)..."
-          $timeout = 0
-          while ($timeout -lt 120) {
-            try {
-              $logs = docker logs $(docker ps -q -f "name=oracle-db") 2>&1
-              if ($logs -match "Database opened") {
-                Write-Host "✅ Oracle Database is ready!"
-                exit 0
-              }
-            } catch {
-              # Continue waiting
-            }
-            Write-Host "Waiting... ($timeout/120 seconds)"
-            Start-Sleep -Seconds 5
-            $timeout += 5
-          }
-          Write-Host "❌ Oracle Database failed to start"
-          docker-compose logs oracle-db
-          exit 1
-        shell: powershell
+          echo "⏳ Waiting for Oracle Database to initialize (this takes ~90 seconds)..."
+          timeout=0
+          while [ $timeout -lt 120 ]; do
+            if docker exec -it $(docker ps -q -f "name=oracle-db") sqlplus -L testuser/testpass123@localhost:1521/FREEPDB1 <<< "SELECT 1 FROM DUAL;" > /dev/null 2>&1; then
+              echo "✅ Oracle Database is ready!"
+              break
+            fi
+            echo "Waiting... ($timeout/120 seconds)"
+            sleep 5
+            timeout=$((timeout + 5))
+          done
+          if [ $timeout -ge 120 ]; then
+            echo "❌ Oracle Database failed to start"
+            docker-compose logs oracle-db
+            exit 1
+          fi
+        shell: bash
         timeout-minutes: 3
 
       - name: Run database connection tests
@@ -114,27 +120,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
       - name: Start Docker containers (Oracle DB + Webapp)
         run: docker-compose up -d
 
       - name: Wait for services to be ready
         run: |
-          Write-Host "⏳ Waiting for services to be ready..."
-          for ($i = 1; $i -le 30; $i++) {
-            try {
-              $response = Invoke-WebRequest -Uri "http://localhost:3000/api/health" -UseBasicParsing -ErrorAction Stop
-              if ($response.StatusCode -eq 200) {
-                Write-Host "✅ Services are ready!"
-                exit 0
-              }
-            } catch {
-              # Continue waiting
-            }
-            Write-Host "Waiting... ($i/30)"
-            Start-Sleep -Seconds 2
-          }
-          Write-Host "⚠️ Services took too long to start, but continuing..."
-        shell: powershell
+          echo "⏳ Waiting for services to be ready..."
+          for i in {1..30}; do
+            if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "✅ Services are ready!"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+        shell: bash
 
       - name: Run E2E tests (INCLUDING Database Validation)
         run: npm run test:e2e -- --project=chromium
