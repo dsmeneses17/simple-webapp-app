@@ -28,7 +28,7 @@ jobs:
         run: npm ci
 
       - name: Run unit tests (excluding database connection tests)
-        run: npx playwright test tests/unit/env-config.spec.ts tests/unit/excel-helper.spec.ts tests/unit/oracle-db-helper.spec.ts tests/unit/page-objects.spec.ts --project=chromium
+        run: npx playwright test tests/unit/env-config.spec.ts tests/unit/excel-helper.spec.ts tests/unit/oracle-db-helper.spec.ts tests/unit/page-objects.spec.ts --project=chromium --quiet
         env:
           BASE_URL: ${{ vars.BASE_URL }}
           ENV: ${{ vars.ENV }}
@@ -66,7 +66,7 @@ jobs:
         run: npm ci
 
       - name: Run database connection tests
-        run: npx playwright test tests/unit/oracle-db-connection.spec.ts --project=chromium
+        run: npx playwright test tests/unit/oracle-db-connection.spec.ts --project=chromium --quiet
         env:
           BASE_URL: ${{ vars.BASE_URL }}
           ENV: ${{ vars.ENV }}
@@ -104,7 +104,7 @@ jobs:
         run: npm ci
 
       - name: Run E2E tests (INCLUDING Database Validation)
-        run: npm run test:e2e -- --project=chromium
+        run: npm run test:e2e -- --project=chromium --quiet
         env:
           BASE_URL: ${{ vars.BASE_URL }}
           ENV: ${{ vars.ENV }}

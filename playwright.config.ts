@@ -20,9 +20,9 @@ export default defineConfig({
     // Workers: 1 en CI, automático en local
     workers: process.env.CI ? 1 : undefined,
 
-    // Reporter: Allure + lista en consola
+    // Reporter: Allure + lista en consola (quiet mode)
     reporter: [
-        ['list'],
+        ['list', { printSteps: true }],
         ['allure-playwright', { outputFolder: 'allure-results' }],
     ],
 

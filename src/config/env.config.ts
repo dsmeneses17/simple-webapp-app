@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 
-dotenv.config();
+// Load environment variables silently
+dotenv.config({ debug: false });
 
 export const config = {
     /** URL base de la aplicación bajo test */
