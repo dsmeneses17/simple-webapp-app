@@ -78,6 +78,14 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           EXCEL_DATA_PATH: ${{ vars.EXCEL_DATA_PATH }}
 
+      - name: Upload database test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-connection-test-results
+          path: allure-results/
+          retention-days: 14
+
   e2e-tests:
     name: E2E Tests
     runs-on: self-hosted
@@ -131,6 +139,13 @@ jobs:
           path: allure-results-unit
         continue-on-error: true
 
+      - name: Download database connection test results
+        uses: actions/download-artifact@v4
+        with:
+          name: db-connection-test-results
+          path: allure-results-db
+        continue-on-error: true
+
       - name: Download E2E test results
         uses: actions/download-artifact@v4
         with:
@@ -149,7 +164,7 @@ jobs:
         continue-on-error: true
 
       - name: Generate Allure Report
-        run: allure generate allure-results-unit allure-results-e2e --clean -o allure-report
+        run: allure generate allure-results-unit allure-results-db allure-results-e2e --clean -o allure-report
         continue-on-error: true
 
       - name: Upload Allure Report
