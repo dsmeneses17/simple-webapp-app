@@ -46,7 +46,9 @@ jobs:
         run: |
           if (Test-Path allure-results) {
             New-Item -ItemType Directory -Force -Path allure-results-unit | Out-Null
-            Move-Item -Path allure-results/* -Destination allure-results-unit/ -Force
+            Get-ChildItem allure-results | Move-Item -Destination allure-results-unit/ -Force
+          } else {
+            Write-Host "No allure-results directory found"
           }
         shell: powershell
 
@@ -76,7 +78,7 @@ jobs:
         run: npm ci
 
       - name: Run database connection tests
-        run: npx playwright test tests/unit/oracle-db-connection.spec.ts --project=chromium
+        run: npx playwright test tests/unit/oracle-db-connection.spec.ts --project=chromium --quiet
         env:
           BASE_URL: ${{ vars.BASE_URL }}
           ENV: ${{ vars.ENV }}
@@ -93,7 +95,9 @@ jobs:
         run: |
           if (Test-Path allure-results) {
             New-Item -ItemType Directory -Force -Path allure-results-db | Out-Null
-            Move-Item -Path allure-results/* -Destination allure-results-db/ -Force
+            Get-ChildItem allure-results | Move-Item -Destination allure-results-db/ -Force
+          } else {
+            Write-Host "No allure-results directory found"
           }
         shell: powershell
 
@@ -140,7 +144,9 @@ jobs:
         run: |
           if (Test-Path allure-results) {
             New-Item -ItemType Directory -Force -Path allure-results-e2e | Out-Null
-            Move-Item -Path allure-results/* -Destination allure-results-e2e/ -Force
+            Get-ChildItem allure-results | Move-Item -Destination allure-results-e2e/ -Force
+          } else {
+            Write-Host "No allure-results directory found"
           }
         shell: powershell
 
@@ -190,6 +196,30 @@ jobs:
       - name: Install Allure CLI
         run: npm install -g allure-commandline
         continue-on-error: true
+
+      - name: List downloaded artifacts
+        run: |
+          Write-Host "=== Listing allure-results-unit ==="
+          if (Test-Path allure-results-unit) {
+            Get-ChildItem -Path allure-results-unit -Recurse
+          } else {
+            Write-Host "allure-results-unit not found"
+          }
+          
+          Write-Host "=== Listing allure-results-db ==="
+          if (Test-Path allure-results-db) {
+            Get-ChildItem -Path allure-results-db -Recurse
+          } else {
+            Write-Host "allure-results-db not found"
+          }
+          
+          Write-Host "=== Listing allure-results-e2e ==="
+          if (Test-Path allure-results-e2e) {
+            Get-ChildItem -Path allure-results-e2e -Recurse
+          } else {
+            Write-Host "allure-results-e2e not found"
+          }
+        shell: powershell
 
       - name: Generate Allure Report
         run: allure generate allure-results-unit allure-results-db allure-results-e2e --clean -o allure-report
