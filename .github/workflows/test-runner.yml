@@ -48,7 +48,7 @@ jobs:
             New-Item -ItemType Directory -Force -Path allure-results-unit | Out-Null
             Move-Item -Path allure-results/* -Destination allure-results-unit/ -Force
           }
-        shell: pwsh
+        shell: powershell
 
       - name: Upload unit test results
         if: always()
@@ -95,7 +95,7 @@ jobs:
             New-Item -ItemType Directory -Force -Path allure-results-db | Out-Null
             Move-Item -Path allure-results/* -Destination allure-results-db/ -Force
           }
-        shell: pwsh
+        shell: powershell
 
       - name: Upload database test results
         if: always()
@@ -142,7 +142,7 @@ jobs:
             New-Item -ItemType Directory -Force -Path allure-results-e2e | Out-Null
             Move-Item -Path allure-results/* -Destination allure-results-e2e/ -Force
           }
-        shell: pwsh
+        shell: powershell
 
       - name: Upload test results
         if: always()
