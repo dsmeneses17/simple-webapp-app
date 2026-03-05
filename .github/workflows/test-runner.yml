@@ -27,23 +27,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Create .env file for unit tests
-        run: |
-          Write-Host "Creating .env file for unit tests"
-          @"
-          BASE_URL=${{ vars.BASE_URL }}
-          ENV=${{ vars.ENV }}
-          CI=true
-          DB_HOST=${{ vars.DB_HOST }}
-          DB_PORT=${{ vars.DB_PORT }}
-          DB_SERVICE_NAME=${{ secrets.DB_SERVICE_NAME }}
-          DB_USER=${{ secrets.DB_USER }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          EXCEL_DATA_PATH=${{ vars.EXCEL_DATA_PATH }}
-          "@ | Out-File -FilePath .env -Encoding UTF8
-
       - name: Run unit tests (excluding database connection tests)
         run: npx playwright test tests/unit/env-config.spec.ts tests/unit/excel-helper.spec.ts tests/unit/oracle-db-helper.spec.ts tests/unit/page-objects.spec.ts --project=chromium
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
+          ENV: ${{ vars.ENV }}
+          CI: true
+          DB_HOST: ${{ vars.DB_HOST }}
+          DB_PORT: ${{ vars.DB_PORT }}
+          DB_SERVICE_NAME: ${{ secrets.DB_SERVICE_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          EXCEL_DATA_PATH: ${{ vars.EXCEL_DATA_PATH }}
 
       - name: Upload unit test results
         if: always()
@@ -70,23 +65,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Create .env file for database tests
-        run: |
-          Write-Host "Creating .env file for database connection tests"
-          @"
-          BASE_URL=${{ vars.BASE_URL }}
-          ENV=${{ vars.ENV }}
-          CI=true
-          DB_HOST=${{ vars.DB_HOST }}
-          DB_PORT=${{ vars.DB_PORT }}
-          DB_SERVICE_NAME=${{ secrets.DB_SERVICE_NAME }}
-          DB_USER=${{ secrets.DB_USER }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          EXCEL_DATA_PATH=${{ vars.EXCEL_DATA_PATH }}
-          "@ | Out-File -FilePath .env -Encoding UTF8
-
       - name: Run database connection tests
         run: npx playwright test tests/unit/oracle-db-connection.spec.ts --project=chromium
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
+          ENV: ${{ vars.ENV }}
+          CI: true
+          DB_HOST: ${{ vars.DB_HOST }}
+          DB_PORT: ${{ vars.DB_PORT }}
+          DB_SERVICE_NAME: ${{ secrets.DB_SERVICE_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          EXCEL_DATA_PATH: ${{ vars.EXCEL_DATA_PATH }}
 
       - name: Upload database test results
         if: always()
@@ -113,23 +103,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Create .env file for E2E tests
-        run: |
-          Write-Host "Creating .env file for E2E tests"
-          @"
-          BASE_URL=${{ vars.BASE_URL }}
-          ENV=${{ vars.ENV }}
-          CI=true
-          DB_HOST=${{ vars.DB_HOST }}
-          DB_PORT=${{ vars.DB_PORT }}
-          DB_SERVICE_NAME=${{ secrets.DB_SERVICE_NAME }}
-          DB_USER=${{ secrets.DB_USER }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          EXCEL_DATA_PATH=${{ vars.EXCEL_DATA_PATH }}
-          "@ | Out-File -FilePath .env -Encoding UTF8
-
       - name: Run E2E tests (INCLUDING Database Validation)
         run: npm run test:e2e -- --project=chromium
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
+          ENV: ${{ vars.ENV }}
+          CI: true
+          DB_HOST: ${{ vars.DB_HOST }}
+          DB_PORT: ${{ vars.DB_PORT }}
+          DB_SERVICE_NAME: ${{ secrets.DB_SERVICE_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          EXCEL_DATA_PATH: ${{ vars.EXCEL_DATA_PATH }}
 
       - name: Upload test results
         if: always()
