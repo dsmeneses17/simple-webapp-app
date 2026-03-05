@@ -39,25 +39,13 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           EXCEL_DATA_PATH: ${{ vars.EXCEL_DATA_PATH }}
-          ALLURE_RESULTS_DIR: ./allure-results-unit
-
-      - name: Move unit test results to named directory
-        if: always()
-        run: |
-          if (Test-Path allure-results) {
-            New-Item -ItemType Directory -Force -Path allure-results-unit | Out-Null
-            Get-ChildItem allure-results | Move-Item -Destination allure-results-unit/ -Force
-          } else {
-            Write-Host "No allure-results directory found"
-          }
-        shell: powershell
 
       - name: Upload unit test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
-          path: allure-results-unit/
+          path: allure-results/
           retention-days: 14
 
   db-connection-tests:
@@ -90,23 +78,12 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           EXCEL_DATA_PATH: ${{ vars.EXCEL_DATA_PATH }}
 
-      - name: Move database test results to named directory
-        if: always()
-        run: |
-          if (Test-Path allure-results) {
-            New-Item -ItemType Directory -Force -Path allure-results-db | Out-Null
-            Get-ChildItem allure-results | Move-Item -Destination allure-results-db/ -Force
-          } else {
-            Write-Host "No allure-results directory found"
-          }
-        shell: powershell
-
       - name: Upload database test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: db-connection-test-results
-          path: allure-results-db/
+          path: allure-results/
           retention-days: 14
 
   e2e-tests:
@@ -139,23 +116,12 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           EXCEL_DATA_PATH: ${{ vars.EXCEL_DATA_PATH }}
 
-      - name: Move E2E test results to named directory
-        if: always()
-        run: |
-          if (Test-Path allure-results) {
-            New-Item -ItemType Directory -Force -Path allure-results-e2e | Out-Null
-            Get-ChildItem allure-results | Move-Item -Destination allure-results-e2e/ -Force
-          } else {
-            Write-Host "No allure-results directory found"
-          }
-        shell: powershell
-
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
-          path: allure-results-e2e/
+          path: allure-results/
           retention-days: 14
           if-no-files-found: ignore
 
