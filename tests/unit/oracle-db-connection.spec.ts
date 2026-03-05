@@ -66,9 +66,9 @@ test.describe('OracleDBHelper - Real Connection Tests', () => {
     test('should connect and disconnect without errors', async () => {
         // Test the full lifecycle: connect -> query -> close
         await db.connect();
-        const result = await db.query('SELECT 1 AS test_num FROM DUAL');
+        const result = await db.query('SELECT 1 AS TEST_NUM FROM DUAL');
         expect(result).toHaveLength(1);
-        expect(result[0].test_num).toBe(1);
+        expect(result[0].TEST_NUM).toBe(1);
         await db.close();
     });
 
