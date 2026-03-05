@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "Webapp app simple",
+			"path": "."
+		},
+		{
+			"name": "allure-report",
+			"path": "../../../Downloads/allure-report"
+		}
+	],
+	"settings": {}
+}
