@@ -1,6 +1,6 @@
 name: CI - Unit & E2E Tests
 #comment: This workflow runs unit and E2E tests on a self-hosted runner named self-hosted. It generates Allure reports and deploys them to GitHub Pages.
-# Updated to force workflow refresh d1
+# Updated to force workflow refresh d2
 on:
   push:
     branches: [main, develop, feature/self-hosted-runner]
