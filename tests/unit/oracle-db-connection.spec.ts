@@ -5,7 +5,7 @@ import { config } from '../../src/config/env.config';
 /**
  * Unit tests for OracleDBHelper Database Connection.
  * These tests verify that the database is actually running and accessible.
- * Useful for CI to confirm the database is deployed correctly.
+ * Useful for CI to confirm the database is deployed correctly.d
  */
 test.describe.configure({ retries: 2 });
 
