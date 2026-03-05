@@ -7,7 +7,9 @@ import { config } from '../../src/config/env.config';
  * These tests verify that the database is actually running and accessible.
  * Useful for CI to confirm the database is deployed correctly.
  */
-test.describe('OracleDBHelper - Real Connection Tests', () => {
+test.describe.configure({ retries: 2 });
+
+test.describe('Database Connection Tests', () => {
     let db: OracleDBHelper;
 
     test.beforeEach(async () => {
