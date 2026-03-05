@@ -47,16 +47,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Create .env file for database tests
+        run: |
+          Write-Host "Creating .env file for database connection tests"
+          @"
+          BASE_URL=http://localhost:3000
+          ENV=dev
+          CI=true
+          DB_HOST=localhost
+          DB_PORT=1521
+          DB_SERVICE_NAME=FREEPDB1
+          DB_USER=testuser
+          DB_PASSWORD=testpass123
+          EXCEL_DATA_PATH=./src/data/test-data.xlsx
+          "@ | Out-File -FilePath .env -Encoding UTF8
+
       - name: Run database connection tests
         run: npm run test:unit -- tests/unit/oracle-db-connection.spec.ts --project=chromium
-        env:
-          DB_HOST: localhost
-          DB_PORT: 1521
-          DB_SERVICE_NAME: FREEPDB1
-          DB_USER: testuser
-          DB_PASSWORD: testpass123
-          BASE_URL: http://localhost:3000
-          CI: true
 
       - name: Upload database test results
         if: always()
@@ -71,17 +78,24 @@ jobs:
     runs-on: self-hosted
     needs: db-connection-tests
 
-    env:
-      BASE_URL: http://localhost:3000
-      DB_HOST: localhost
-      DB_PORT: 1521
-      DB_SERVICE_NAME: FREEPDB1
-      DB_USER: testuser
-      DB_PASSWORD: testpass123
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Create .env file for E2E tests
+        run: |
+          Write-Host "Creating .env file for E2E tests"
+          @"
+          BASE_URL=http://localhost:3000
+          ENV=dev
+          CI=true
+          DB_HOST=localhost
+          DB_PORT=1521
+          DB_SERVICE_NAME=FREEPDB1
+          DB_USER=testuser
+          DB_PASSWORD=testpass123
+          EXCEL_DATA_PATH=./src/data/test-data.xlsx
+          "@ | Out-File -FilePath .env -Encoding UTF8
 
       - name: Run E2E tests (INCLUDING Database Validation)
         run: npm run test:e2e -- --project=chromium
