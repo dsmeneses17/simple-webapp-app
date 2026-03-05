@@ -33,7 +33,7 @@ test.describe('OracleDBHelper - Real Connection Tests', () => {
 
         expect(result).toHaveLength(1);
         expect(result[0].BANNER).toContain('Oracle');
-        console.log(`✓ Oracle Version: ${result[0].BANNER}`);
+        console.log(`[PASS] Oracle Version: ${result[0].BANNER}`);
     });
 
     test('should get current date from database', async () => {
@@ -45,7 +45,7 @@ test.describe('OracleDBHelper - Real Connection Tests', () => {
 
         expect(result).toHaveLength(1);
         expect(result[0].CURRENT_DATE).toBeTruthy();
-        console.log(`✓ Database Date: ${result[0].CURRENT_DATE}`);
+        console.log(`[PASS] Database Date: ${result[0].CURRENT_DATE}`);
     });
 
     test('should verify connection string is properly configured', () => {
@@ -59,8 +59,8 @@ test.describe('OracleDBHelper - Real Connection Tests', () => {
         expect(expectedService).toBeTruthy();
         expect(expectedUser).toBeTruthy();
 
-        console.log(`✓ Connection String: ${config.db.connectionString}`);
-        console.log(`✓ User: ${expectedUser}`);
+        console.log(`[PASS] Connection String: ${config.db.connectionString}`);
+        console.log(`[PASS] User: ${expectedUser}`);
     });
 
     test('should connect and disconnect without errors', async () => {
@@ -93,7 +93,7 @@ test.describe('OracleDBHelper - Real Connection Tests', () => {
         );
         expect(result3[0].NUM).toBe(3);
 
-        console.log('✓ All sequential queries executed successfully');
+        console.log('[PASS] All sequential queries executed successfully');
     });
 
     test('should verify database is accessible with configured credentials', async () => {
@@ -106,6 +106,6 @@ test.describe('OracleDBHelper - Real Connection Tests', () => {
 
         expect(result).toHaveLength(1);
         expect(result[0].USERNAME).toBeTruthy();
-        console.log(`✓ Connected as user: ${result[0].USERNAME}`);
+        console.log(`[PASS] Connected as user: ${result[0].USERNAME}`);
     });
 });
