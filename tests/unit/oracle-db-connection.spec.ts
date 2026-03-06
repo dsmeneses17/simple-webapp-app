@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { OracleDBHelper } from '../../src/utils/oracle-db.helper';
 import { config } from '../../src/config/env.config';
+import * as allure from 'allure-js-commons';
 
 /**
  * Unit tests for OracleDBHelper Database Connection.
  * These tests verify that the database is actually running and accessible.
- * Useful for CI to confirm the database is deployed correctly.d
+ * Useful for CI to confirm the database is deployed correctly.
  */
 test.describe.configure({ retries: 2 });
 
@@ -21,11 +22,19 @@ test.describe('Database Connection Tests', () => {
     });
 
     test('should connect to Oracle Database', async () => {
+        await allure.parentSuite('Webapp App Simple');
+        await allure.suite('Database Connection');
+        await allure.subSuite('Connection');
+        
         // This test verifies the database is running and credentials are correct
         await expect(db.connect()).resolves.not.toThrow();
     });
 
     test('should execute a simple query on database', async () => {
+        await allure.parentSuite('Webapp App Simple');
+        await allure.suite('Database Connection');
+        await allure.subSuite('Query Execution');
+        
         await db.connect();
 
         // Execute a simple query to get the database version
@@ -39,6 +48,10 @@ test.describe('Database Connection Tests', () => {
     });
 
     test('should get current date from database', async () => {
+        await allure.parentSuite('Webapp App Simple');
+        await allure.suite('Database Connection');
+        await allure.subSuite('Date Query');
+        
         await db.connect();
 
         const result = await db.query<{ CURRENT_DATE: string }>(
@@ -50,7 +63,11 @@ test.describe('Database Connection Tests', () => {
         console.log(`[PASS] Database Date: ${result[0].CURRENT_DATE}`);
     });
 
-    test('should verify connection string is properly configured', () => {
+    test('should verify connection string is properly configured', async () => {
+        await allure.parentSuite('Webapp App Simple');
+        await allure.suite('Database Connection');
+        await allure.subSuite('Configuration');
+        
         const expectedHost = config.db.host;
         const expectedPort = config.db.port;
         const expectedService = config.db.serviceName;
@@ -66,6 +83,10 @@ test.describe('Database Connection Tests', () => {
     });
 
     test('should connect and disconnect without errors', async () => {
+        await allure.parentSuite('Webapp App Simple');
+        await allure.suite('Database Connection');
+        await allure.subSuite('Lifecycle');
+        
         // Test the full lifecycle: connect -> query -> close
         await db.connect();
         const result = await db.query('SELECT 1 AS TEST_NUM FROM DUAL');
@@ -75,6 +96,10 @@ test.describe('Database Connection Tests', () => {
     });
 
     test('should handle multiple queries in sequence', async () => {
+        await allure.parentSuite('Webapp App Simple');
+        await allure.suite('Database Connection');
+        await allure.subSuite('Sequential Queries');
+        
         await db.connect();
 
         // Query 1
@@ -99,6 +124,10 @@ test.describe('Database Connection Tests', () => {
     });
 
     test('should verify database is accessible with configured credentials', async () => {
+        await allure.parentSuite('Webapp App Simple');
+        await allure.suite('Database Connection');
+        await allure.subSuite('Credentials Validation');
+        
         // This test confirms that the credentials in .env match the database
         await db.connect();
 
@@ -111,3 +140,4 @@ test.describe('Database Connection Tests', () => {
         console.log(`[PASS] Connected as user: ${result[0].USERNAME}`);
     });
 });
+
