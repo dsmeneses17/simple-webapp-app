@@ -136,22 +136,40 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: unit-test-results
-          path: allure-results
+          path: allure-results-unit
         continue-on-error: true
 
       - name: Download database connection test results
         uses: actions/download-artifact@v4
         with:
           name: db-connection-test-results
-          path: allure-results
+          path: allure-results-db
         continue-on-error: true
 
       - name: Download E2E test results
         uses: actions/download-artifact@v4
         with:
           name: e2e-test-results
-          path: allure-results
+          path: allure-results-e2e
         continue-on-error: true
+
+      - name: Merge all test results into single directory
+        run: |
+          if (Test-Path allure-results-unit) {
+            New-Item -ItemType Directory -Force -Path allure-results | Out-Null
+            Copy-Item -Path allure-results-unit/* -Destination allure-results -Recurse -Force
+          }
+          if (Test-Path allure-results-db) {
+            New-Item -ItemType Directory -Force -Path allure-results | Out-Null
+            Copy-Item -Path allure-results-db/* -Destination allure-results -Recurse -Force
+          }
+          if (Test-Path allure-results-e2e) {
+            New-Item -ItemType Directory -Force -Path allure-results | Out-Null
+            Copy-Item -Path allure-results-e2e/* -Destination allure-results -Recurse -Force
+          }
+          Write-Host "=== Final allure-results directory ==="
+          Get-ChildItem -Path allure-results -Recurse | Measure-Object | Select-Object -ExpandProperty Count
+        shell: powershell
 
       - name: Install Java
         uses: actions/setup-java@v4
