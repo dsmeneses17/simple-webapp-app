@@ -27,8 +27,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit tests (excluding database connection tests)
-        run: npx playwright test tests/unit/env-config.spec.ts tests/unit/excel-helper.spec.ts tests/unit/oracle-db-helper.spec.ts tests/unit/page-objects.spec.ts --project=chromium --quiet
+      - name: Run unit tests (including database connection tests)
+        run: npx playwright test tests/unit/env-config.spec.ts tests/unit/excel-helper.spec.ts tests/unit/oracle-db-helper.spec.ts tests/unit/oracle-db-connection.spec.ts tests/unit/page-objects.spec.ts --project=chromium --quiet
         env:
           BASE_URL: ${{ vars.BASE_URL }}
           ENV: ${{ vars.ENV }}
@@ -48,48 +48,10 @@ jobs:
           path: allure-results/
           retention-days: 14
 
-  db-connection-tests:
-    name: Database Connection Tests
-    runs-on: self-hosted
-    needs: unit-tests
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run database connection tests
-        run: npx playwright test tests/unit/oracle-db-connection.spec.ts --project=chromium --quiet
-        env:
-          BASE_URL: ${{ vars.BASE_URL }}
-          ENV: ${{ vars.ENV }}
-          CI: true
-          DB_HOST: ${{ vars.DB_HOST }}
-          DB_PORT: ${{ vars.DB_PORT }}
-          DB_SERVICE_NAME: ${{ secrets.DB_SERVICE_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          EXCEL_DATA_PATH: ${{ vars.EXCEL_DATA_PATH }}
-
-      - name: Upload database test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: db-connection-test-results
-          path: allure-results/
-          retention-days: 14
-
   e2e-tests:
     name: E2E Tests
     runs-on: self-hosted
-    needs: db-connection-tests
+    needs: unit-tests
 
     steps:
       - name: Checkout repository
@@ -128,7 +90,7 @@ jobs:
   test-results:
     name: Store Test Results
     runs-on: self-hosted
-    needs: [unit-tests, db-connection-tests, e2e-tests]
+    needs: [unit-tests, e2e-tests]
     if: always()
 
     steps:
@@ -137,13 +99,6 @@ jobs:
         with:
           name: unit-test-results
           path: allure-results-unit
-        continue-on-error: true
-
-      - name: Download database connection test results
-        uses: actions/download-artifact@v4
-        with:
-          name: db-connection-test-results
-          path: allure-results-db
         continue-on-error: true
 
       - name: Download E2E test results
@@ -160,11 +115,6 @@ jobs:
             Copy-Item -Path allure-results-unit/* -Destination allure-results -Recurse -Force
             Write-Host "Copied unit tests: $(Get-ChildItem allure-results-unit -Recurse | Measure-Object | Select-Object -ExpandProperty Count) files"
           }
-          if (Test-Path allure-results-db) {
-            New-Item -ItemType Directory -Force -Path allure-results | Out-Null
-            Copy-Item -Path allure-results-db/* -Destination allure-results -Recurse -Force
-            Write-Host "Copied DB tests: $(Get-ChildItem allure-results-db -Recurse | Measure-Object | Select-Object -ExpandProperty Count) files"
-          }
           if (Test-Path allure-results-e2e) {
             New-Item -ItemType Directory -Force -Path allure-results | Out-Null
             Copy-Item -Path allure-results-e2e/* -Destination allure-results -Recurse -Force
@@ -173,7 +123,6 @@ jobs:
           Write-Host "=== Final allure-results directory ==="
           $finalCount = Get-ChildItem -Path allure-results -Recurse | Measure-Object | Select-Object -ExpandProperty Count
           Write-Host "Total files in merged directory: $finalCount"
-          Get-ChildItem -Path allure-results -Recurse | Select-Object Name
         shell: powershell
 
       - name: Install Java
