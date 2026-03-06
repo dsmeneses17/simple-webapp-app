@@ -158,17 +158,22 @@ jobs:
           if (Test-Path allure-results-unit) {
             New-Item -ItemType Directory -Force -Path allure-results | Out-Null
             Copy-Item -Path allure-results-unit/* -Destination allure-results -Recurse -Force
+            Write-Host "Copied unit tests: $(Get-ChildItem allure-results-unit -Recurse | Measure-Object | Select-Object -ExpandProperty Count) files"
           }
           if (Test-Path allure-results-db) {
             New-Item -ItemType Directory -Force -Path allure-results | Out-Null
             Copy-Item -Path allure-results-db/* -Destination allure-results -Recurse -Force
+            Write-Host "Copied DB tests: $(Get-ChildItem allure-results-db -Recurse | Measure-Object | Select-Object -ExpandProperty Count) files"
           }
           if (Test-Path allure-results-e2e) {
             New-Item -ItemType Directory -Force -Path allure-results | Out-Null
             Copy-Item -Path allure-results-e2e/* -Destination allure-results -Recurse -Force
+            Write-Host "Copied E2E tests: $(Get-ChildItem allure-results-e2e -Recurse | Measure-Object | Select-Object -ExpandProperty Count) files"
           }
           Write-Host "=== Final allure-results directory ==="
-          Get-ChildItem -Path allure-results -Recurse | Measure-Object | Select-Object -ExpandProperty Count
+          $finalCount = Get-ChildItem -Path allure-results -Recurse | Measure-Object | Select-Object -ExpandProperty Count
+          Write-Host "Total files in merged directory: $finalCount"
+          Get-ChildItem -Path allure-results -Recurse | Select-Object Name
         shell: powershell
 
       - name: Install Java
