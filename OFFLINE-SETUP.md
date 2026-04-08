@@ -8,9 +8,9 @@ Before starting, ensure you have these files/installers ready:
 
 | Component | Version | Notes |
 |-----------|---------|-------|
-| Java | 17+ | JDK installer (.exe) |
+| Java | 17+ | JDK installer (.msi) |
 | Node.js | 20+ | MSI installer (.msi) |
-| Allure | 3.4.5+ | Installer (.exe) |
+| Allure | 3.4.5+ | Installed via npm (no installer needed) |
 | Playwright Cache | 1.58+ | Browser binaries (.zip) |
 | Project files | Latest | Source code from GitHub release |
 
@@ -70,7 +70,13 @@ cd C:\Installers
 
 #### Install Java 17
 ```powershell
-& "C:\Installers\installers\java-17-installer.exe" /s INSTALLDIR="C:\DevTools\Java17"
+$msiArgs = @(
+    "/i"
+    "C:\Installers\installers\jdk-17.0.12_windows-x64_bin.msi"
+    "/quiet"
+    "INSTALLDIR=C:\DevTools\Java17"
+)
+Start-Process msiexec.exe -ArgumentList $msiArgs -Wait -NoNewWindow
 [System.Environment]::SetEnvironmentVariable("JAVA_HOME", "C:\DevTools\Java17", "Machine")
 ```
 
@@ -78,7 +84,7 @@ cd C:\Installers
 ```powershell
 $msiArgs = @(
     "/i"
-    "C:\Installers\installers\node-20-installer.msi"
+    "C:\Installers\installers\node-v20.20.2-x64.msi"
     "/quiet"
     "INSTALLDIR=C:\DevTools\nodejs"
 )
@@ -86,9 +92,10 @@ Start-Process msiexec.exe -ArgumentList $msiArgs -Wait -NoNewWindow
 ```
 
 #### Install Allure
-```powershell
-& "C:\Installers\installers\allure-installer.exe" /S /D="C:\DevTools\Allure"
-```
+
+Allure is automatically installed via npm when you run `npm install` on the project (see Step 6).
+
+No separate installation is required.
 
 #### Setup Playwright Cache
 ```powershell

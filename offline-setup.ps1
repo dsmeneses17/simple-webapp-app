@@ -18,10 +18,11 @@ if (-not (Test-Path $InstallPath)) {
 }
 
 # 1. Install Java 17
-Write-Host "`n[1/4] Installing Java 17..." -ForegroundColor Cyan
-$javaInstaller = Get-ChildItem -Path $InstallerPath -Filter "*java*17*.exe" -ErrorAction SilentlyContinue
+Write-Host "`n[1/3] Installing Java 17..." -ForegroundColor Cyan
+$javaInstaller = Get-ChildItem -Path $InstallerPath -Filter "*jdk*.msi" -ErrorAction SilentlyContinue
 if ($javaInstaller) {
-    & $javaInstaller.FullName /s INSTALLDIR="$InstallPath\Java17"
+    $msiArgs = @("/i", $javaInstaller.FullName, "/quiet", "INSTALLDIR=$InstallPath\Java17")
+    Start-Process msiexec.exe -ArgumentList $msiArgs -Wait -NoNewWindow
     Write-Host "✓ Java 17 installed" -ForegroundColor Green
     [System.Environment]::SetEnvironmentVariable("JAVA_HOME", "$InstallPath\Java17", "Machine")
 } else {
@@ -29,40 +30,24 @@ if ($javaInstaller) {
 }
 
 # 2. Install Node.js 20
-Write-Host "`n[2/4] Installing Node.js 20..." -ForegroundColor Cyan
-$nodeInstaller = Get-ChildItem -Path $InstallerPath -Filter "*node*20*.msi" -ErrorAction SilentlyContinue
+Write-Host "`n[2/3] Installing Node.js 20..." -ForegroundColor Cyan
+$nodeInstaller = Get-ChildItem -Path $InstallerPath -Filter "*node*.msi" -ErrorAction SilentlyContinue
 if ($nodeInstaller) {
-    $msiArgs = @(
-        "/i"
-        $nodeInstaller.FullName
-        "/quiet"
-        "INSTALLDIR=$InstallPath\nodejs"
-        "ADDLOCAL=NodeProgramFiles,NodeVS2015Natives,NodeEtwReg,npm"
-    )
+    $msiArgs = @("/i", $nodeInstaller.FullName, "/quiet", "INSTALLDIR=$InstallPath\nodejs")
     Start-Process msiexec.exe -ArgumentList $msiArgs -Wait -NoNewWindow
     Write-Host "✓ Node.js 20 installed" -ForegroundColor Green
 } else {
     Write-Host "✗ Node.js 20 installer not found in $InstallerPath" -ForegroundColor Red
 }
 
-# 3. Install Allure
-Write-Host "`n[3/4] Installing Allure..." -ForegroundColor Cyan
-$allureInstaller = Get-ChildItem -Path $InstallerPath -Filter "*allure*.exe" -ErrorAction SilentlyContinue
-if ($allureInstaller) {
-    & $allureInstaller.FullName /S /D="$InstallPath\Allure"
-    Write-Host "✓ Allure installed" -ForegroundColor Green
-} else {
-    Write-Host "✗ Allure installer not found in $InstallerPath" -ForegroundColor Red
-}
-
-# 4. Setup Playwright cache
-Write-Host "`n[4/4] Setting up Playwright binaries..." -ForegroundColor Cyan
+# 3. Setup Playwright binaries
+Write-Host "`n[3/3] Setting up Playwright binaries..." -ForegroundColor Cyan
 $playwrightCache = Get-ChildItem -Path $InstallerPath -Filter "playwright-cache.zip" -ErrorAction SilentlyContinue
 if ($playwrightCache) {
     $playwrightCacheDir = "$env:USERPROFILE\.cache\ms-playwright"
     New-Item -ItemType Directory -Path $playwrightCacheDir -Force | Out-Null
     Expand-Archive -Path $playwrightCache.FullName -DestinationPath $playwrightCacheDir -Force
-    Write-Host "✓ Playwright binaries extracted to $playwrightCacheDir" -ForegroundColor Green
+    Write-Host "✓ Playwright binaries extracted" -ForegroundColor Green
 } else {
     Write-Host "✗ Playwright cache not found in $InstallerPath" -ForegroundColor Red
 }
@@ -75,12 +60,10 @@ Write-Host "`n=== Verification ===" -ForegroundColor Cyan
 java -version 2>&1 | Select-Object -First 1
 node --version
 npm --version
-allure --version
 
 Write-Host "`n✓ Setup Complete! Restart your terminal to apply all changes." -ForegroundColor Green
 Write-Host "`nNext steps:" -ForegroundColor Yellow
-Write-Host "  1. Restart PowerShell as Administrator"
-Write-Host "  2. Navigate to your project folder"
-Write-Host "  3. Run: npm install"
-Write-Host "  4. Copy your project's .env file"
-Write-Host "  5. Run: npm test"
+Write-Host "  1. Navigate to your project folder"
+Write-Host "  2. Run: npm install (includes Allure via npm)"
+Write-Host "  3. Copy your project's .env file"
+Write-Host "  4. Run: npm test"

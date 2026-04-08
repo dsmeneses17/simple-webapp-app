@@ -22,9 +22,10 @@
 ### What's Included in v1.0
 
 **Automated Setup Scripts:**
-- Complete PowerShell automation for Java, Node.js, Allure installation
+- Complete PowerShell automation for Java and Node.js installation
 - Playwright browser binary cache setup
-- Environment validation
+- Environment path configuration
+- Allure installed automatically via npm during `npm install`
 
 **Documentation:**
 - Step-by-step offline setup guide
@@ -33,13 +34,12 @@
 
 **Cached Assets:**
 - Playwright browser binaries (Chromium, Firefox, WebKit)
-- NPM packages cache (optional)
 
 **Supported Versions:**
-- Java 17+
-- Node.js 20+
-- Allure 3.4.5+
-- Playwright 1.58.2+
+- Java 17 (jdk-17.0.12_windows-x64_bin.msi)
+- Node.js 20.20.2 (node-v20.20.2-x64.msi)
+- Allure 3.4.5+ (installed via npm)
+- Playwright 1.58.2+ (browser binaries included)
 
 ### Use Case
 Deploy consistent development environment on air-gapped Windows machines without internet access.

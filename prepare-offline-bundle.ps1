@@ -25,7 +25,7 @@ foreach ($dir in $bundleStructure) {
 }
 
 # 1. Create Playwright cache
-Write-Host "`n[1/4] Creating Playwright binaries cache..." -ForegroundColor Cyan
+Write-Host "`n[1/2] Creating Playwright binaries cache..." -ForegroundColor Cyan
 $playwrightCache = "$env:USERPROFILE\.cache\ms-playwright"
 if (Test-Path $playwrightCache) {
     $playwrightZip = "$BundlePath\installers\playwright-cache.zip"
@@ -37,7 +37,7 @@ if (Test-Path $playwrightCache) {
 }
 
 # 2. Copy setup script and documentation
-Write-Host "`n[2/4] Copying setup files..." -ForegroundColor Cyan
+Write-Host "`n[2/2] Copying setup files..." -ForegroundColor Cyan
 @(
     "offline-setup.ps1",
     "OFFLINE-SETUP.md"
@@ -51,28 +51,14 @@ Write-Host "`n[2/4] Copying setup files..." -ForegroundColor Cyan
     }
 }
 
-# 3. Create npm cache archive (optional, for faster offline installs)
-Write-Host "`n[3/4] Creating npm packages cache..." -ForegroundColor Cyan
-$npmCachePath = "$env:APPDATA\npm-cache"
-if (Test-Path $npmCachePath) {
-    Write-Host "Compressing npm cache (this may take a minute)..." -ForegroundColor Yellow
-    $npmCacheZip = "$BundlePath\installers\npm-cache.zip"
-    Compress-Archive -Path $npmCachePath -DestinationPath $npmCacheZip -Force
-    $size = (Get-Item $npmCacheZip).Length / 1MB
-    Write-Host "✓ NPM cache archived ($([math]::Round($size, 2)) MB)" -ForegroundColor Green
-} else {
-    Write-Host "⚠ NPM cache not found" -ForegroundColor Yellow
-}
-
-# 4. Create inventory checklist
-Write-Host "`n[4/4] Creating inventory checklist..." -ForegroundColor Cyan
+# Create inventory checklist
+Write-Host "`nCreating inventory checklist..." -ForegroundColor Cyan
 $inventory = @"
 # Offline Environment Bundle - Inventory Checklist
 
-## Required Installers (Missing - obtain these manually)
-- [ ] `java-17-installer.exe` or newer
-- [ ] `node-20-installer.msi` or newer  
-- [ ] `allure-installer.exe` v3.4.5 or newer
+## Required Installers (Must place in installers/ folder)
+- [ ] `jdk-17.0.12_windows-x64_bin.msi` (Java Development Kit 17)
+- [ ] `node-v20.20.2-x64.msi` (Node.js 20)
 
 ## Included in Bundle
 @"
@@ -82,7 +68,7 @@ Get-ChildItem "$BundlePath\installers\*.zip" | ForEach-Object {
     $inventory += "`n- [x] $($_.Name) ($([math]::Round($size, 2)) MB)"
 }
 
-$inventory += "`n`n## Setup Instructions`nSee: scripts/OFFLINE-SETUP.md`n"
+$inventory += "`n`n## Notes`n- Allure is installed via npm (included in project dependencies)`n- Playwright browser binaries are included in this bundle`n`n## Setup Guide`nSee: scripts/OFFLINE-SETUP.md`n"
 
 $inventory | Out-File -FilePath "$BundlePath\BUNDLE-INVENTORY.md" -Encoding UTF8
 Write-Host "✓ Created inventory: $BundlePath\BUNDLE-INVENTORY.md" -ForegroundColor Green
@@ -91,53 +77,56 @@ Write-Host "✓ Created inventory: $BundlePath\BUNDLE-INVENTORY.md" -ForegroundC
 $ghInstructions = @"
 # GitHub Release Upload Instructions
 
-## 1. Create Release Tag
+## 1. Prepare Installers
+Before uploading, ensure these files are in $BundlePath\installers\:
+- jdk-17.0.12_windows-x64_bin.msi
+- node-v20.20.2-x64.msi
+
+(These installers are not included in the bundle due to size/licensing)
+
+## 2. Create Release Tag
 \`\`\`powershell
 git tag -a offline-env-setup-v1.0 -m "Offline environment setup bundle v1.0"
 git push origin offline-env-setup-v1.0
 \`\`\`
 
-## 2. Create GitHub Release
+## 3. Create GitHub Release
 - Go to: https://github.com/your-repo/releases/new
 - Select tag: offline-env-setup-v1.0
 - Title: "Offline Environment Setup Bundle v1.0"
 - Description: See RELEASE-NOTES.md
 - Upload files from: $BundlePath\installers\*.zip
+- Upload files from: $BundlePath\installers\*.msi
 - Upload files from: $BundlePath\scripts\*
 
-## 3. Assets to Upload
+## 4. Assets to Upload
 From $BundlePath\installers\:
-- playwright-cache.zip (Playwright browsers)
-- npm-cache.zip (Optional: NPM packages cache)
+- playwright-cache.zip (Playwright browsers - ~300MB)
+- jdk-17.0.12_windows-x64_bin.msi (Java - ~160MB)
+- node-v20.20.2-x64.msi (Node.js - ~80MB)
 
 From $BundlePath\scripts\:
 - offline-setup.ps1 (Setup automation script)
 - OFFLINE-SETUP.md (Setup instructions)
 
-Plus these manual uploads:
-- java-17-installer.exe
-- node-20-installer.msi
-- allure-installer.exe
-
-## 4. Download & Extract on Air-Gapped Machine
+## 5. Download & Extract on Air-Gapped Machine
 \`\`\`powershell
-# Download all release assets
-# Extract to: C:\Installers
+# Download all release assets to: C:\Installers
 
 # Run setup
-.\offline-setup.ps1 -InstallerPath "C:\Installers\installers"
+.\offline-setup.ps1 -InstallerPath "C:\Installers"
 \`\`\`
 
 ## Total Bundle Size Estimate
 - Playwright cache: ~300MB
-- NPM cache: ~500-800MB (depends on dependencies)
-- Installers: Varies by version
-- Total: ~1-1.5GB
+- Java 17 JDK: ~160MB
+- Node.js 20: ~80MB
+- Total: ~540MB
 
 ## Notes
-- Installers (Java, Node, Allure) must be added manually due to size/licensing
-- This bundle is specific to project: simple-webapp-app
-- For other projects: install compatible versions, then redistribute with updated cache files
+- Allure is installed via npm (3.4.5+)
+- This bundle is for project: simple-webapp-app
+- For other projects with same versions: reuse this bundle
 "@
 
 $ghInstructions | Out-File -FilePath "$BundlePath\GITHUB-RELEASE-INSTRUCTIONS.md" -Encoding UTF8
